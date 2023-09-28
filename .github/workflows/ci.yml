@@ -51,7 +51,11 @@ jobs:
           key: composer-${{ hashFiles('composer.lock') }}
 
       - name: Install Composer Dependencies
-        run: cd api && composer install -q --no-interaction --no-scripts --prefer-dist
+        run: cd api && composer install --no-scripts --prefer-dist
+
+      - name: Setup environment
+        run: |
+          php -r "file_exists('.env') || copy('.env.example', '.env');"
 
       - name: Execute tests (Unit and Feature tests) via PHPUnit
         run: cd api && ./vendor/bin/phpunit
