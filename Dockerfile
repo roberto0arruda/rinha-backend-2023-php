@@ -8,6 +8,7 @@ ENV TIMEZONE=${timezone:-"America/Sao_Paulo"}
 RUN apt-get update -y && apt-get upgrade -y && apt-get install -y \
     build-essential \
     libpq-dev \
+    zip \
     postgresql-client \
     postgresql-client-common 
 
@@ -32,7 +33,11 @@ RUN set -ex \
     && ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime \
     && echo "${TIMEZONE}" > /etc/timezone \
     # ---------- clear works ----------
-    && rm -rf /var/cache/apk/* /tmp/* /usr/share/man \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
     && echo -e "\033[42;37m Build Completed :).\033[0m\n"
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# enable mod_rewrite, mod_proxy
+RUN a2enmod rewrite include headers proxy
