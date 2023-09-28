@@ -19,10 +19,24 @@ jobs:
     needs: build
     runs-on: ubuntu-20.04
 
+    services:
+      db:
+        image: postgres:11
+        env:
+          POSTGRES_USER: 'rinha'
+          POSTGRES_PASSWORD: 'rinhapass'
+        ports:
+          - "5432:5432"
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd="pg_isready -d db"
+          --health-interval=30s
+          --health-timeout=60s
+          --health-retries=5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - run: docker-compose up -d db
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
@@ -37,10 +51,10 @@ jobs:
           key: composer-${{ hashFiles('composer.lock') }}
 
       - name: Install Composer Dependencies
-        run: cd api && composer install -q --no-ansi --no-interaction --no-scripts --prefer-dist
+        run: cd api && composer install -q --no-ansi --no-interaction --prefer-dist
 
       - name: Execute tests (Unit and Feature tests) via PHPUnit
-        run: vendor/bin/phpunit
+        run: api/vendor/bin/phpunit
         env:
           DB_CONNECTION: pgsql
           DB_HOST: db
