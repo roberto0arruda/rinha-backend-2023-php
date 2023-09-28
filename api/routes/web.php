@@ -16,3 +16,6 @@
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
+
+$router->post('pessoas', ['uses' => 'PessoaController@store']);
+$router->get('pessoas/{id}', ['uses' => 'PessoaController@show']);
