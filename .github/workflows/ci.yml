@@ -18,54 +18,14 @@ jobs:
     name: Lumen run tests with posgres
     needs: build
     runs-on: ubuntu-20.04
-
-    services:
-      db:
-        image: postgres:11
-        env:
-          POSTGRES_USER: 'rinha'
-          POSTGRES_PASSWORD: 'rinhapass'
-        ports:
-          - "5432:5432"
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd="pg_isready -d db"
-          --health-interval=30s
-          --health-timeout=60s
-          --health-retries=5
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '7.4'
-          extensions: ctype, fileinfo, json, pdo
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v2
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-
-      - name: Install Composer Dependencies
-        run: cd api && composer install --no-scripts --prefer-dist
-
-      - name: Setup environment
-        run: |
-          php -r "file_exists('.env') || copy('.env.example', '.env');"
+      - run: docker-compose up -d
 
       - name: Execute tests (Unit and Feature tests) via PHPUnit
-        run: cd api && ./vendor/bin/phpunit
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: db
-          DB_PORT: 5432
-          DB_DATABASE: rinha
-          DB_USERNAME: rinha
-          DB_PASSWORD: rinhapass
+        run: docker-compose exec api ./vendor/bin/phpunit
 
   stress-test:
     runs-on: ubuntu-20.04

@@ -25,6 +25,14 @@ services:
       - ./docker/000-default.conf:/etc/apache2/sites-available/000-default.conf
     expose:
       - 80
+    environment:
+      APP_URL: http://localhost:9999
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: rinha
+      DB_USERNAME: rinha
+      DB_PASSWORD: rinhapass
     networks:
       - rinha-network
     depends_on:
