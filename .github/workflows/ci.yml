@@ -1,0 +1,58 @@
+name: ci
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@master
+      - name: Build
+        run: docker build . -t rinha-de-backend-2023-q3
+
+  php-test-with-db:
+    name: Lumen run tests with posgres
+    needs: build
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          extensions: ctype, fileinfo, json, pdo
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Install Composer Dependencies
+        run: cd api && composer install -q --no-ansi --no-interaction --no-scripts --prefer-dist
+
+      - name: Execute tests (Unit and Feature tests) via PHPUnit
+        run: vendor/bin/phpunit
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: db
+          DB_PORT: 5432
+          DB_DATABASE: rinha
+          DB_USERNAME: rinha
+          DB_PASSWORD: rinhapass
+
+  test:
+    runs-on: ubuntu-20.04
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker-compose up -d
