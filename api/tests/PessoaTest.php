@@ -71,4 +71,39 @@ class PessoaTest extends TestCase
 
         $this->get("/pessoas/{$pessoa->id}")->seeJson($pessoa->toArray());
     }
+
+    public function testBuscaDePessoasPorTermo()
+    {
+        $pessoa = Pessoa::factory()->create([
+            'id' => Ramsey\Uuid\Uuid::uuid4()->toString(),
+            'apelido' => 'roberto',
+            'nome' => 'Roberto Arruda',
+            'stack' => null,
+        ]);
+
+        $response = $this->get("/pessoas?t={$pessoa->apelido}");
+
+        $response->seeJsonEquals([$pessoa->toArray()])
+            ->assertResponseStatus(200);
+
+        $response = $this->get("/pessoas?t=joao");
+
+        $response->seeJsonEquals([])
+            ->assertResponseStatus(200);
+
+        $response = $this->get("/pessoas?t=");
+
+        $response->assertResponseStatus(400);
+    }
+
+    public function testContagemDePessoas()
+    {
+        Pessoa::factory()->count(10)->create([
+            'stack' => null,
+        ]);
+
+        $this->get("/contagem-pessoas");
+
+        $this->assertEquals(10, $this->response->getContent());
+    }
 }

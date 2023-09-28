@@ -44,4 +44,26 @@ class PessoaController extends Controller
     {
         return response()->json(Pessoa::find($id));
     }
+
+    public function search(Request $request)
+    {
+        $termo = $request->input('t');
+
+        if (!$termo) {
+            abort(400);
+        }
+
+        $pessoas = Pessoa::where('apelido', 'ilike', '%' . $termo . '%')
+            ->orWhere('nome', 'ilike', '%' . $termo . '%')
+            ->orWhere('stack', 'ilike', '%' . $termo . '%')
+            ->limit(50)
+            ->get();
+
+        return response()->json($pessoas);
+    }
+
+    public function count()
+    {
+        return Pessoa::all()->count();
+    }
 }

@@ -19,3 +19,6 @@ $router->get('/', function () use ($router) {
 
 $router->post('pessoas', ['uses' => 'PessoaController@store']);
 $router->get('pessoas/{id}', ['uses' => 'PessoaController@show']);
+$router->get('pessoas', ['uses' => 'PessoaController@search']);
+
+$router->get('contagem-pessoas', ['uses' => 'PessoaController@count']);
