@@ -51,10 +51,10 @@ jobs:
           key: composer-${{ hashFiles('composer.lock') }}
 
       - name: Install Composer Dependencies
-        run: cd api && composer install -q --no-ansi --no-interaction --prefer-dist
+        run: cd api && composer install -q --no-interaction --no-scripts --prefer-dist
 
       - name: Execute tests (Unit and Feature tests) via PHPUnit
-        run: api/vendor/bin/phpunit
+        run: cd api && ./vendor/bin/phpunit
         env:
           DB_CONNECTION: pgsql
           DB_HOST: db
@@ -62,12 +62,3 @@ jobs:
           DB_DATABASE: rinha
           DB_USERNAME: rinha
           DB_PASSWORD: rinhapass
-
-  test:
-    runs-on: ubuntu-20.04
-    needs: build
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v3
-      - run: docker-compose up -d
