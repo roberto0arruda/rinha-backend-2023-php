@@ -73,7 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: docker-compose up -d
-      - run: docker-compose exec api php artisan migrate
+      - run: docker exec -it api php artisan migrate
 
       - name: Load test
         run: |
