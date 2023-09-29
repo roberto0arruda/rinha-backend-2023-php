@@ -71,12 +71,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: docker-compose up -d
-      - name: Install PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '7.4'
-          extensions: ctype, fileinfo, json, pdo
-      - run: cd api && php artisan migrate
 
       - name: Load test
         run: |
