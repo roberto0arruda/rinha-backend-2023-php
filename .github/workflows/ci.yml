@@ -25,7 +25,7 @@ jobs:
       - run: docker-compose up -d
 
       - name: Execute tests (Unit and Feature tests) via PHPUnit
-        run: docker-compose exec api ./vendor/bin/phpunit
+        run: docker exec -it rinha-backend-2023-php-api-1 ./vendor/bin/phpunit
 
   stress-test:
     runs-on: ubuntu-20.04
