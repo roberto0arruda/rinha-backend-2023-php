@@ -20,8 +20,10 @@ jobs:
     runs-on: ubuntu-20.04
 
     services:
-      db:
+      postgres:
         image: postgres:11
+        ports:
+          - 5432:5432
         env:
           POSTGRES_USER: rinha
           POSTGRES_PASSWORD: rinhapass
@@ -50,15 +52,11 @@ jobs:
       - name: Install Composer Dependencies
         run: cd api && composer install --no-scripts --prefer-dist
 
-      - name: Setup environment
-        run: |
-          php -r "file_exists('./api/.env') || copy('./api/.env.example', './api/.env');"
-
       - name: Execute tests (Unit and Feature tests) via PHPUnit
         run: cd api && ./vendor/bin/phpunit
         env:
           DB_CONNECTION: pgsql
-          DB_HOST: db
+          DB_HOST: postgres
           DB_PORT: 5432
           DB_DATABASE: rinha
           DB_USERNAME: rinha
@@ -73,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: docker-compose up -d
-      - run: docker exec -it api php artisan migrate
+      - run: docker exec -it rinha-backend-2023-php_api_1 php artisan migrate
 
       - name: Load test
         run: |
