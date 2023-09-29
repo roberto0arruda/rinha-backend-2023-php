@@ -18,14 +18,51 @@ jobs:
     name: Lumen run tests with posgres
     needs: build
     runs-on: ubuntu-20.04
+
+    services:
+      db:
+        image: postgres:11
+        env:
+          POSTGRES_USER: rinha
+          POSTGRES_PASSWORD: rinhapass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - run: docker-compose up -d
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          extensions: ctype, fileinfo, json, pdo
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Install Composer Dependencies
+        run: cd api && composer install --no-scripts --prefer-dist
+
+      - name: Setup environment
+        run: |
+          php -r "file_exists('./api/.env') || copy('./api/.env.example', './api/.env');"
 
       - name: Execute tests (Unit and Feature tests) via PHPUnit
-        run: docker exec -it rinha-backend-2023-php-api-1 ./vendor/bin/phpunit
+        run: cd api && ./vendor/bin/phpunit
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: db
+          DB_PORT: 5432
+          DB_DATABASE: rinha
+          DB_USERNAME: rinha
+          DB_PASSWORD: rinhapass
 
   stress-test:
     runs-on: ubuntu-20.04
@@ -36,6 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: docker-compose up -d
+      - run: docker-compose exec api php artisan migrate
 
       - name: Load test
         run: |
