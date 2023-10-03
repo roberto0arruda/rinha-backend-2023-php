@@ -21,8 +21,9 @@ services:
     build:
       context: .
     volumes:
-      - ./api:/var/www/html
+      - ./:/var/www/
       - ./docker/000-default.conf:/etc/apache2/sites-available/000-default.conf
+    working_dir: /var/www/
     expose:
       - 80
     environment:

@@ -50,10 +50,10 @@ jobs:
           key: composer-${{ hashFiles('composer.lock') }}
 
       - name: Install Composer Dependencies
-        run: cd api && composer install --no-scripts --prefer-dist
+        run: composer install --no-scripts --prefer-dist
 
       - name: Execute tests (Unit and Feature tests) via PHPUnit
-        run: cd api && ./vendor/bin/phpunit
+        run: ./vendor/bin/phpunit
         env:
           DB_CONNECTION: pgsql
           DB_HOST: localhost
