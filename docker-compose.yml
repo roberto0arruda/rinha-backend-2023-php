@@ -16,6 +16,11 @@ services:
       - rinha-network
     depends_on:
       - api
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 512MB
 
   api:
     build:
@@ -38,6 +43,11 @@ services:
       - rinha-network
     depends_on:
       - db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 512MB
 
   db:
     image: postgres:11
@@ -51,3 +61,8 @@ services:
       - ./docker/db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - rinha-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.2'
+          memory: 1536MB

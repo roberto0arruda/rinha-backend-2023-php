@@ -1,4 +1,6 @@
 
+DROP TABLE IF EXISTS public.pessoas;
+
 CREATE TABLE IF NOT EXISTS public.pessoas
 (
     id         uuid         NOT NULL,
