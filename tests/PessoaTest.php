@@ -12,7 +12,7 @@ class PessoaTest extends TestCase
      *
      * @return void
      */
-    public function testExample()
+    public function testExample(): void
     {
         $this->get('/');
 
@@ -22,27 +22,30 @@ class PessoaTest extends TestCase
         );
     }
 
-    public function testCriarPessoa()
+    public function testCriarPessoa(): void
     {
         $pessoa = Pessoa::factory()->make();
 
-        $this->json('POST', '/pessoas', $pessoa->toArray());
+        $response = $this->json('POST', '/pessoas', $pessoa->toArray());
 
+        $response->seeHeader('Location');
         $this->assertResponseStatus(201);
+        $this->seeInDatabase('pessoas', ['apelido' => $pessoa->apelido]);
     }
 
-    public function testNaoCriarPessoaComApelidoJaExistente()
+    public function testNaoCriarPessoaComApelidoJaExistente(): void
     {
         $pessoa = Pessoa::factory()->create([
             'id' => Ramsey\Uuid\Uuid::uuid4()->toString(),
             'apelido' => 'roberto',
+            'searchable' => 'fake',
         ]);
 
         $this->json('POST', '/pessoas', $pessoa->toArray())
             ->assertResponseStatus(422);
     }
 
-    public function testNaoCriarPessoaComApelidoMaiorQue32Caracteres()
+    public function testNaoCriarPessoaComApelidoMaiorQue32Caracteres(): void
     {
         $pessoa = Pessoa::factory()->make([
             'apelido' => 'robertorobertorobertorobertoroberto',
@@ -52,7 +55,7 @@ class PessoaTest extends TestCase
             ->assertResponseStatus(422);
     }
 
-    public function testNaoCriarPessoaComNomeMaiorQue100Caracteres()
+    public function testNaoCriarPessoaComNomeMaiorQue100Caracteres(): void
     {
         $pessoa = Pessoa::factory()->make([
             'nome' => 'Roberto Arruda Roberto Arruda Roberto Arruda Roberto Arruda Roberto Arruda Roberto Arruda Roberto Arruda ',
@@ -62,28 +65,30 @@ class PessoaTest extends TestCase
             ->assertResponseStatus(422);
     }
 
-    public function testDetalhesDeUmaPessoaPeloId()
+    public function testDetalhesDeUmaPessoaPeloId(): void
     {
         $pessoa = Pessoa::factory()->create([
             'id' => Ramsey\Uuid\Uuid::uuid4()->toString(),
             'apelido' => 'roberto',
+            'searchable' => 'fake',
         ]);
 
         $this->get("/pessoas/{$pessoa->id}")->seeJson($pessoa->toArray());
     }
 
-    public function testBuscaDePessoasPorTermo()
+    public function testBuscaDePessoasPorTermo(): void
     {
-        $pessoa = Pessoa::factory()->create([
-            'id' => Ramsey\Uuid\Uuid::uuid4()->toString(),
+        $pessoa = Pessoa::factory()->make([
             'apelido' => 'roberto',
             'nome' => 'Roberto Arruda',
-            'stack' => null,
         ]);
+
+        $this->json('POST', '/pessoas', $pessoa->toArray());
+        $this->seeInDatabase('pessoas', ['apelido' => $pessoa->apelido]);
 
         $response = $this->get("/pessoas?t={$pessoa->apelido}");
 
-        $response->seeJsonEquals([$pessoa->toArray()])
+        $response->seeJsonContains(['apelido' => $pessoa->apelido])
             ->assertResponseStatus(200);
 
         $response = $this->get("/pessoas?t=joao");
@@ -96,10 +101,11 @@ class PessoaTest extends TestCase
         $response->assertResponseStatus(400);
     }
 
-    public function testContagemDePessoas()
+    public function testContagemDePessoas(): void
     {
         Pessoa::factory()->count(10)->create([
             'stack' => null,
+            'searchable' => 'fake',
         ]);
 
         $this->get("/contagem-pessoas");

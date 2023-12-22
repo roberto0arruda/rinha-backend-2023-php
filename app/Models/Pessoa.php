@@ -23,5 +23,6 @@ class Pessoa extends Model
         'nome',
         'nascimento',
         'stack',
+        'searchable',
     ];
 }

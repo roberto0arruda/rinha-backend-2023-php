@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pessoa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 
 class PessoaController extends Controller
@@ -29,12 +30,20 @@ class PessoaController extends Controller
 
         $uuid = Uuid::uuid4();
 
+        $index = sprintf(
+            '%s %s %s',
+            Str::lower($request->input('apelido')),
+            Str::lower($request->input('nome')),
+            Str::lower(implode(' ', $request->input('stack') ?? []))
+        );
+
         $pessoa = Pessoa::create([
             'id' => $uuid->toString(),
             'apelido' => $request->input('apelido'),
             'nome' => $request->input('nome'),
             'nascimento' => $request->input('nascimento'),
             'stack' => $request->input('stack'),
+            'searchable' => $index,
         ]);
 
         return response()->json([], 201, ['Location' => "/pessoas/{$pessoa->id}"]);
@@ -53,9 +62,7 @@ class PessoaController extends Controller
             abort(400);
         }
 
-        $pessoas = Pessoa::where('apelido', 'ilike', '%' . $termo . '%')
-            ->orWhere('nome', 'ilike', '%' . $termo . '%')
-            ->orWhere('stack', 'ilike', '%' . $termo . '%')
+        $pessoas = Pessoa::query()->where('searchable', 'ilike', '%' . Str::lower($termo) . '%')
             ->limit(50)
             ->get();
 
@@ -64,6 +71,6 @@ class PessoaController extends Controller
 
     public function count()
     {
-        return Pessoa::all()->count();
+        return Pessoa::count();
     }
 }

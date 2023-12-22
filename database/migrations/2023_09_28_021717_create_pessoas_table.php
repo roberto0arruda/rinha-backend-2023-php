@@ -19,6 +19,7 @@ class CreatePessoasTable extends Migration
             $table->string('nome', 100);
             $table->date('nascimento');
             $table->json('stack')->nullable();
+            $table->string('searchable')->fulltext();
             $table->timestamps();
         });
     }

@@ -1,43 +1,44 @@
-FROM php:7.4-apache
+FROM php:8.2-fpm
 
-ARG timezone
-
-ENV TIMEZONE=${timezone:-"America/Sao_Paulo"}
+# Arguments defined in docker-compose.yml
+#ARG user
+#ARG uid
 
 # Install dependencies some base extensions
-RUN apt-get update -y && apt-get upgrade -y && apt-get install -y \
-    build-essential \
+RUN apt-get update && apt-get install -y \
+    libfreetype-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
     libpq-dev \
-    zip \
-    postgresql-client \
-    postgresql-client-common 
-
-# Install Postgre PDO
-RUN docker-php-ext-install pdo pdo_pgsql pgsql \
+	&& docker-php-ext-configure gd --with-freetype --with-jpeg \
+	&& docker-php-ext-install -j$(nproc) gd pdo_pgsql pgsql \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql
+
+#COPY docker/supervisord.conf /etc/supervisord.conf
+
+# Create system user to run Composer and Artisan Commands
+#RUN useradd -G www-data,root -u $uid -d /home/$user $user
+#RUN mkdir -p /home/$user/.composer && \
+#    chown -R $user:$user /home/$user
 
 # update
 RUN set -ex \
-    # show php version and extensions
-    && php -v \
-    && php -m \
     && cd ${PHP_INI_DIR} \
     # - config PHP
     && { \
-    echo "upload_max_filesize=128M"; \
-    echo "post_max_size=128M"; \
     echo "memory_limit=1G"; \
-    echo "date.timezone=${TIMEZONE}"; \
     } | tee conf.d/99_overrides.ini \
-    # - config timezone
-    && ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime \
-    && echo "${TIMEZONE}" > /etc/timezone \
-    # ---------- clear works ----------
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
     && echo -e "\033[42;37m Build Completed :).\033[0m\n"
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# enable mod_rewrite, mod_proxy
-RUN a2enmod rewrite include headers proxy
+# Set working directory
+WORKDIR /var/www
+
+#USER $user
+
+COPY ./docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
